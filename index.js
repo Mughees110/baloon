@@ -8,14 +8,8 @@ const ejs = require("ejs");
 const multer = require("multer");
 const cookieParser = require("cookie-parser");
 const { ObjectId } = require("mongodb");
-const sgMail = require("@sendgrid/mail");
-const socketIo = require("socket.io");
-const http = require("http");
 
-const API_KEY =
-  "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";
-console.log(API_KEY);
-sgMail.setApiKey(API_KEY);
+const http = require("http");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
