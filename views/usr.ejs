@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Chat</title>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #chat {
+      width: 70%;
+      margin: 20px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+    }
+    #messageInput {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+    #sendButton {
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    #typingIndicator {
+      color: grey;
+    }
+    .message {
+      display: flex;
+      align-items: center;
+    }
+    .message .text {
+      flex: 1;
+    }
+    .message .status {
+      margin-left: 10px;
+    }
+    .seen {
+      color: blue;
+    }
+  </style>
+</head>
+<body>
+  <h1>User Chat</h1>
+  <div id="chat"></div>
+  <div id="typingIndicator"></div>
+  <input type="text" id="messageInput" placeholder="Type your message...">
+  <button id="sendButton">Send</button>
+
+  <script>
+    const socket = io();
+    const chatDiv = document.getElementById('chat');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const typingIndicator = document.getElementById('typingIndicator');
+    let typing = false;
+    let timeout;
+
+    // Emit event to store socket id for the current user
+    socket.emit('storeSocketId', '<%= id %>');
+
+    // Handle receiving private messages
+    socket.on('privateMessage', ({ senderId, message, messageId }) => {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message');
+      messageDiv.dataset.messageId = messageId;
+      const messageText = document.createElement('span');
+      messageText.classList.add('text');
+      messageText.innerHTML = `<strong>Admin: </strong>${message}`;
+      const statusSpan = document.createElement('span');
+      statusSpan.classList.add('status');
+      statusSpan.innerHTML = '&#10004;&#10004;'; // Grey double tick
+      messageDiv.appendChild(messageText);
+      messageDiv.appendChild(statusSpan);
+      chatDiv.appendChild(messageDiv);
+      chatDiv.scrollTo(0, chatDiv.scrollHeight);
+      
+      // Emit message seen event if the message is from the admin
+      socket.emit('messageSeen', { messageId, userId: '<%= id %>' });
+    });
+
+    // Handle typing events
+    messageInput.addEventListener('input', () => {
+      if (!typing) {
+        typing = true;
+        socket.emit('typing', { senderId: '<%= id %>', receiverId: '66745866ecc749906062e30a' });
+      }
+      clearTimeout(timeout);
+      timeout = setTimeout(stopTyping, 1000);
+    });
+
+    function stopTyping() {
+      typing = false;
+      socket.emit('stop typing', { senderId: '<%= id %>', receiverId: '66745866ecc749906062e30a' });
+    }
+
+    socket.on('typing', (data) => {
+      if (data.senderId !== '<%= id %>') {
+        typingIndicator.innerText = `Admin is typing...`;
+      }
+    });
+
+    socket.on('stop typing', (data) => {
+      if (data.senderId !== '<%= id %>') {
+        typingIndicator.innerText = '';
+      }
+    });
+    socket.on('update-mid', (data) => {
+      console.log('updatemid'+data);
+      var myDiv = document.querySelector(`div[data-message-id="${data.tempMessageId}"]`);
+
+      myDiv.dataset.messageId = data.messageId;
+    });
+
+    // Send message when send button is clicked
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (message !== '') {
+        const tempMessageId = `temp-${Date.now()}`;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.dataset.messageId = tempMessageId;
+
+        const messageText = document.createElement('span');
+        messageText.classList.add('text');
+        
+          messageText.innerHTML = `<strong>You: </strong>${message}`;
+        
+
+        const statusSpan = document.createElement('span');
+        statusSpan.classList.add('status');
+        statusSpan.innerHTML = '&#10004;&#10004;';
+
+        messageDiv.appendChild(messageText);
+        messageDiv.appendChild(statusSpan);
+        chatDiv.appendChild(messageDiv);
+        socket.emit('privateMessage', { senderId: '<%= id %>', receiverId: '66745866ecc749906062e30a', message,tempMessageId });
+       
+        messageInput.value = '';
+      }
+    });
+
+    socket.on('messageSeen', ({ messageId }) => {
+      const messageDivs = chatDiv.getElementsByClassName('message');
+      for (let messageDiv of messageDivs) {
+        if (messageDiv.dataset.messageId === messageId) {
+          const statusSpan = messageDiv.querySelector('.status');
+          statusSpan.innerHTML = '&#10004;&#10004;'; // Blue double tick
+          statusSpan.classList.add('seen');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Chat</title>
+  <link id="pagestyle" href="/assets/css/material-dashboard.css?v=3.1.0" rel="stylesheet" />
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100vh;
+    }
+
+    #main-container {
+      display: flex;
+      flex-direction: column;
+      height: 91%;
+    }
+
+    #chat-container {
+      display: flex;
+      flex: 1;
+      height: 100%;
+    }
+
+    #userListContainer {
+      width: 20%;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    #searchInput {
+      padding: 10px;
+      box-sizing: border-box;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+
+    #userList {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    #topicList {
+      width: 15%;
+      border-right: 1px solid #ccc;
+    }
+
+    #chat {
+      flex: 1;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    #typingIndicator {
+      color: grey;
+      padding: 10px;
+    }
+
+    #messageInputContainer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: #f0f0f0;
+    }
+
+    #messageInput {
+      flex: 1;
+      padding: 10px;
+      margin-right: 10px;
+      box-sizing: border-box;
+      border-radius: 1rem;
+      border: 0;
+    }
+
+    #sendButton {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 1rem;
+    }
+
+    #sendButton:hover {
+      background-color: black;
+      color: white;
+    }
+
+    .message {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      margin: 1rem 0rem;
+      border-radius: 1rem;
+    }
+
+    .message .text {
+      flex: 1;
+    }
+
+    .message .status {
+      margin-left: 10px;
+      font-size: small;
+    }
+
+    .seen {
+      color: #6b6be3;
+    }
+
+    .user {
+      cursor: pointer;
+    }
+
+    .user:hover {
+      background-color: lightgray;
+    }
+
+    .selected-user {
+      background-color: lightgray;
+    }
+
+    .selected-topic {
+      background-color: lightgray;
+    }
+
+    .my-message {
+      margin-inline-start: 30%;
+      background-color: #168316;
+      color: white;
+    }
+
+    .other-message {
+      background-color: #d3d3d340;
+      margin-inline-end: 30%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="main-container">
+    <div id="chat-container">
+      <div id="userListContainer">
+        <input type="text" id="searchInput" placeholder="Search users...">
+        <div id="userList">
+          <!-- User list will go here -->
+        </div>
+      </div>
+
+      <div id="topicList">
+        <div onclick="startChat('66a4255e58762b31982d4f23')" class="topic border-bottom p-3 d-flex justify-content-between 66a4255e58762b31982d4f23 selected-topic">
+          <span>alpha</span>
+        </div>
+        <div onclick="startChat('66a4255e58762b31982d4f23')" class="topic border-bottom p-3 d-flex justify-content-between 66a4255e58762b31982d4f23">
+          <span>alpha</span>
+        </div>
+        <div onclick="startChat('66a4255e58762b31982d4f23')" class="topic border-bottom p-3 d-flex justify-content-between 66a4255e58762b31982d4f23">
+          <span>alpha</span>
+        </div>
+        <div onclick="startChat('66a4255e58762b31982d4f23')" class="topic border-bottom p-3 d-flex justify-content-between 66a4255e58762b31982d4f23">
+          <span>alpha</span>
+        </div>
+        <div onclick="startChat('66a4255e58762b31982d4f23')" class="topic border-bottom p-3 d-flex justify-content-between 66a4255e58762b31982d4f23">
+          <span>alpha</span>
+        </div>
+      </div>
+      <div id="chat"></div>
+    </div>
+  </div>
+
+  <div id="messageInputContainer">
+    <div id="typingIndicator"></div>
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button id="sendButton">Send</button>
+  </div>
+  <div id="curr" style="visibility: hidden;"></div>
+<!-- Add this search input field above the user list -->
+
+<script>
+    const socket = io();
+    const chatDiv = document.getElementById('chat');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const curr = document.getElementById('curr');
+    let typing = false;
+    let timeout;
+    let selectedUserId = null;
+    let allUsers = []; // To store all users for search functionality
+
+    // Emit event to store socket id for admin
+    socket.emit('storeSocketId', '66745866ecc749906062e30a');
+
+    // Handle receiving chat history
+    socket.on('chatHistory', (messages) => {
+      console.log(messages);
+      chatDiv.innerHTML = '';
+      messages.forEach(message => {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.dataset.messageId = message._id;
+
+        const messageText = document.createElement('span');
+        messageText.classList.add('text');
+        let statusSpan;
+        if (message.senderId === '66745866ecc749906062e30a') {
+          messageText.innerHTML = `${message.message}`;
+          messageDiv.classList.add('my-message');
+          statusSpan = document.createElement('span');
+          statusSpan.classList.add('status');
+          statusSpan.innerHTML = message.seen ? '&#10004;&#10004;' : '&#10004;&#10004;';
+          if (message.seen) {
+            statusSpan.classList.add('seen');
+          }
+        } else {
+          messageText.innerHTML = `${message.message}`;
+          messageDiv.classList.add('other-message');
+        }
+
+        messageDiv.appendChild(messageText);
+        if (statusSpan) {
+          messageDiv.appendChild(statusSpan);
+        }
+
+        chatDiv.appendChild(messageDiv);
+      });
+    });
+
+    // Handle receiving private messages
+    socket.on('privateMessage', ({ senderId, message, messageId }) => {
+      const userDiv = document.getElementsByClassName("user")[0];
+      const newChatDiv = document.getElementsByClassName(`user ${senderId}`)[0];
+      const userList = document.getElementById(`userList`);
+      if (selectedUserId != senderId) {
+        const unreadCounter = document.getElementById(`message-counter-${senderId}`);
+        unreadCounter.textContent = parseInt(unreadCounter.textContent) + 1;
+      }
+
+      userList.insertBefore(newChatDiv, userDiv);
+
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message');
+      messageDiv.classList.add('other-message');
+      messageDiv.dataset.messageId = messageId;
+
+      const messageText = document.createElement('span');
+      messageText.classList.add('text');
+      messageText.innerHTML = `${message}`;
+
+      const statusSpan = document.createElement('span');
+      statusSpan.classList.add('status');
+      statusSpan.innerHTML = '&#10004;&#10004;';
+
+      messageDiv.appendChild(messageText);
+      messageDiv.appendChild(statusSpan);
+      chatDiv.appendChild(messageDiv);
+      chatDiv.scrollTo(0, chatDiv.scrollHeight);
+
+      // Emit message seen event if the message is from the user
+      if (senderId !== '66745866ecc749906062e30a') {
+        console.log('received' + senderId + messageId);
+        socket.emit('messageSeen', { messageId, userId: senderId });
+      }
+    });
+
+    // Handle typing events
+    messageInput.addEventListener('input', () => {
+      if (!typing) {
+        typing = true;
+        socket.emit('typing', { senderId: '66745866ecc749906062e30a', receiverId: selectedUserId });
+      }
+      clearTimeout(timeout);
+      timeout = setTimeout(stopTyping, 1000);
+    });
+
+    function stopTyping() {
+      typing = false;
+      socket.emit('stop typing', { senderId: '66745866ecc749906062e30a', receiverId: selectedUserId });
+    }
+
+    socket.on('typing', (data) => {
+      typingIndicator.innerText = `User ${data.senderId} is typing...`;
+    });
+
+    socket.on('update-mid', (data) => {
+      console.log('updateMid' + data);
+      const myDiv = document.querySelector(`div[data-message-id="${data.tempMessageId}"]`);
+      if (myDiv) {
+        myDiv.dataset.messageId = data.messageId;
+      }
+    });
+
+    socket.on('stop typing', () => {
+      typingIndicator.innerText = '';
+    });
+
+    // Fetch user list and display in UI (mock example, replace with your actual API call)
+    fetch('/get-usrs')
+      .then(response => response.json())
+      .then(users => {
+        allUsers = users;
+        renderUserList(allUsers);
+      })
+      .catch(error => console.error('Error fetching users:', error));
+
+    function renderUserList(users) {
+      const userListDiv = document.getElementById('userList');
+
+      // Create the search field HTML
+      
+
+      // Create the user list HTML
+      const userListHTML = users.map(user => `
+        <div onclick="startChat('${user._id}')" class="user border-bottom p-3 d-flex justify-content-between ${user._id}">
+          <span>${user.name}</span>
+          <span id="message-counter-${user._id}">0</span>
+        </div>
+      `).join('');
+
+      // Combine the search field and user list HTML
+      userListDiv.innerHTML = userListHTML;
+
+
+    }
+
+    function startChat(userId) {
+      selectedUserId = userId;
+      const messageCounter = document.getElementById(`message-counter-${userId}`);
+      messageCounter.textContent = 0;
+
+      curr.innerText = userId;
+      const user = document.getElementsByClassName(userId)[0];
+      const users = document.getElementsByClassName("user");
+      for (let i = 0; i < users.length; i++) {
+        users[i].classList.remove("selected-user");
+      }
+      user.classList.add("selected-user");
+      chatDiv.innerHTML = `<h2>Chat with User ${userId}</h2>`;
+      const userId1 = '66745866ecc749906062e30a';
+
+      socket.emit('fetchChatHistory', { userId1, userId2: selectedUserId });
+
+      sendButton.onclick = () => {
+        const message = messageInput.value.trim();
+        if (message !== '') {
+          const tempMessageId = `temp-${Date.now()}`;
+
+          const messageDiv = document.createElement('div');
+          messageDiv.classList.add('message');
+          messageDiv.classList.add('my-message');
+          messageDiv.dataset.messageId = tempMessageId;
+
+          const messageText = document.createElement('span');
+          messageText.classList.add('text');
+          messageText.innerHTML = `${message}`;
+
+          const statusSpan = document.createElement('span');
+          statusSpan.classList.add('status');
+          statusSpan.innerHTML = '&#10004;&#10004;';
+
+          messageDiv.appendChild(messageText);
+          messageDiv.appendChild(statusSpan);
+          chatDiv.appendChild(messageDiv);
+          chatDiv.scrollTo(0, chatDiv.scrollHeight);
+          
+          socket.emit('privateMessage', { senderId: userId1, receiverId: userId, message, tempMessageId });
+          messageInput.value = '';
+        }
+      };
+    }
+
+    // Handle message seen event
+    socket.on('messageSeen', ({ messageId }) => {
+      const messageDivs = chatDiv.getElementsByClassName('message');
+      for (let messageDiv of messageDivs) {
+        if (messageDiv.dataset.messageId === messageId) {
+          const statusSpan = messageDiv.querySelector('.status');
+          statusSpan.innerHTML = '&#10004;&#10004;'; // Blue double tick
+          statusSpan.classList.add('seen');
+        }
+      }
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', () => {
+      console.log('yes');
+      const query = searchInput.value.toLowerCase();
+      const filteredUsers = allUsers.filter(user => user.name.toLowerCase().includes(query));
+      renderUserList(filteredUsers);
+    });
+</script>
+
+</body>
+
+</html>
