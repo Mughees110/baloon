@@ -8,8 +8,12 @@ const ejs = require("ejs");
 const multer = require("multer");
 const cookieParser = require("cookie-parser");
 const { ObjectId } = require("mongodb");
+const Stripe = require("stripe");
 
 const http = require("http");
+const stripe = Stripe(
+  "sk_test_51O1qFMKiAN37OnJdKEWRj3a0oCjlxjs5K6pmCfREwnZPgRsqqrKIqKOIpD5iS0Kj96GDdVIXSDcaRJBtsN5tsjRH00nxbQlbD0"
+);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +70,14 @@ const subSchema = new mongoose.Schema({
 });
 const Sub = mongoose.model("Sub", subSchema);
 
+const sizeSchema = new mongoose.Schema({
+  size: { type: String, required: false },
+  price: { type: String, required: false },
+  baloonId: { type: mongoose.Schema.Types.ObjectId, ref: "Baloon" },
+  // Assuming images is an array of file names or URLs
+});
+const Size = mongoose.model("Size", sizeSchema);
+
 const cartSchema = new mongoose.Schema({
   baloonId: { type: mongoose.Schema.Types.ObjectId, ref: "Baloon" },
   accessId: { type: mongoose.Schema.Types.ObjectId, ref: "Access" },
@@ -95,6 +107,14 @@ const aboutSchema = new mongoose.Schema({
   contact: { type: String, required: false }, // Assuming images is an array of file names or URLs
 });
 const About = mongoose.model("About", aboutSchema);
+
+const paymentSchema = new mongoose.Schema({
+  orderId: { type: String, required: false },
+  userId: { type: String, required: false },
+  amount: { type: String, required: false },
+  status: { type: String, required: false }, // Assuming images is an array of file names or URLs
+});
+const Payment = mongoose.model("Payment", paymentSchema);
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: false },
@@ -482,6 +502,71 @@ app.get("/delete-access/:id", async (req, res) => {
     res.redirect("/access?success=3");
   } catch (error) {
     console.error("Error deleting access:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.get("/sizes/:baloonId", async (req, res) => {
+  try {
+    const baloonId = req.params.baloonId;
+    const sizes = await Size.find({ baloonId });
+    const successValue = req.query.success;
+    const successMessage =
+      successValue === "1"
+        ? "Update successful!"
+        : successValue === "2"
+        ? "Stored successfully!"
+        : successValue === "3"
+        ? "Deleted successfully!"
+        : successValue === "4"
+        ? "Email already exists!"
+        : null;
+
+    res.render("sizes", { sizes, baloonId, successMessage }); // Pass the users data to the EJS template
+  } catch (error) {
+    console.error("Error fetching subs:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.get("/sizes-create/:baloonId", (req, res) => {
+  const baloonId = req.params.baloonId;
+  res.render("sizeCreate", { baloonId });
+});
+app.post("/store-size", async (req, res) => {
+  try {
+    const { size, price, baloonId } = req.body;
+    console.log(req.body);
+
+    // Extract file paths from req.files object
+
+    // Create a new Room document
+    const newSize = new Size({
+      size,
+      price,
+      baloonId,
+    });
+    await newSize.save();
+
+    res.redirect("/sizes/" + baloonId + "?success=2");
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+app.get("/delete-size/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "id is required required" });
+    }
+    // Find the user by ID and delete
+    const sub = await Size.findByIdAndDelete(id);
+
+    if (!sub) {
+      return res.status(404).json({ error: "sub not found" });
+    }
+
+    res.redirect("/sizes/" + sub.baloonId + "?success=3");
+  } catch (error) {
+    console.error("Error deleting sub:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -993,6 +1078,126 @@ app.post("/register", async (req, res) => {
     res.json("stored successfully");
   } catch (error) {
     res.status(500).json({ error: error });
+  }
+});
+app.post("/get-baloons", async (req, res) => {
+  try {
+    const { type } = req.body;
+    const baloons = await Baloon.find({ type });
+    res.json(baloons); // Pass the users data to the EJS template
+  } catch (error) {
+    console.error("Error fetching checks:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.post("/get-sizes", async (req, res) => {
+  try {
+    const { baloonId } = req.body;
+    const sizes = await Size.find({ baloonId });
+    res.json(sizes); // Pass the users data to the EJS template
+  } catch (error) {
+    console.error("Error fetching checks:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.post("/get-access", async (req, res) => {
+  try {
+    const access = await Access.find({});
+    res.json(access); // Pass the users data to the EJS template
+  } catch (error) {
+    console.error("Error fetching checks:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.post("/get-about", async (req, res) => {
+  try {
+    const abouts = await About.find({});
+    res.json(abouts); // Pass the users data to the EJS template
+  } catch (error) {
+    console.error("Error fetching checks:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/store-order-mobile", async (req, res) => {
+  try {
+    const { userId, status, carts } = req.body;
+
+    const order = new Order({
+      userId,
+      status,
+    });
+    await order.save();
+    await Promise.all(
+      carts.map(async (cart) => {
+        const crt = new Cart({
+          accessId: cart["accessId"],
+          baloonId: cart["baloonId"],
+          quantity: cart["quantity"],
+          orderId: order._id,
+        });
+        await crt.save();
+      })
+    );
+
+    res.json("stored successfully");
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+app.get("/payment/:userId/:orderId/:amount", async (req, res) => {
+  const userId = req.params.userId;
+  const orderId = req.params.orderId;
+  const amount = req.params.amount;
+  res.render("payment", { userId, orderId, amount });
+});
+app.get("/success", async (req, res) => {
+  res.render("success", {});
+});
+app.get("/error", async (req, res) => {
+  res.render("error", {});
+});
+app.get("/payments", async (req, res) => {
+  const payments = await Payment.find({}).populate("userId").exec();
+  res.render("payments", { payments });
+});
+app.post("/create-charge", async (req, res) => {
+  const { token, amount, userId, orderId } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Unable to create stripe token" });
+  }
+
+  try {
+    // Charge the card directly using the token
+    const charge = await stripe.charges.create({
+      amount: amount, // Amount in cents
+      currency: "usd",
+      description: "Example charge",
+      source: token, // Use the token directly
+    });
+    if (charge && charge["status"] == "succeeded") {
+      const payment = new Payment({
+        userId,
+        orderId,
+        amount,
+        status: "success",
+      });
+      await payment.save();
+      return res.status(200).json({ message: "success", charge });
+    }
+    if (!charge || charge["status"] != "succeeded") {
+      const payment = new Payment({
+        userId,
+        orderId,
+        amount,
+        status: "error",
+      });
+      await payment.save();
+      return res.status(200).json({ message: "error", charge });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
 const server = http.createServer(app);
