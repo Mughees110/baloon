@@ -9,6 +9,7 @@ const multer = require("multer");
 const cookieParser = require("cookie-parser");
 const { ObjectId } = require("mongodb");
 const Stripe = require("stripe");
+const cors = require("cors");
 
 const http = require("http");
 const stripe = Stripe(
@@ -28,6 +29,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(cors());
+
 async function connectToDatabase() {
   console.log("done");
   try {
