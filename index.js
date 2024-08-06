@@ -1057,6 +1057,27 @@ app.post("/get-baloons", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.post("/get-baloons-by-sub", async (req, res) => {
+  try {
+    const { subId } = req.body;
+    const baloons = await Baloon.find({ subId });
+
+    res.json(baloons); // Pass the rooms data with attached service documents to the client
+  } catch (error) {
+    console.error("Error fetching baloons:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.post("/get-subs", async (req, res) => {
+  try {
+    const baloons = await Sub.find({});
+
+    res.json(baloons); // Pass the rooms data with attached service documents to the client
+  } catch (error) {
+    console.error("Error fetching baloons:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 app.post("/login", async (req, res) => {
   try {
