@@ -939,32 +939,7 @@ app.post("/store-order", async (req, res) => {
     res.status(500).json({ error: error });
   }
 });
-app.post("/store-order-mobile", async (req, res) => {
-  try {
-    const { userId, status, carts } = req.body;
 
-    const order = new Order({
-      userId,
-      status,
-    });
-    await order.save();
-    await Promise.all(
-      carts.map(async (cart) => {
-        const crt = new Cart({
-          ballonId: cart["baloonId"],
-          accessId: cart["accessId"],
-          quantity: cart["quantity"],
-          orderId: order._id,
-        });
-        await crt.save();
-      })
-    );
-
-    res.json("stored successfully");
-  } catch (error) {
-    res.status(500).json({ error: error });
-  }
-});
 app.post("/update-order/:id", async (req, res) => {
   try {
     const id = req.params.id;
