@@ -1117,7 +1117,33 @@ app.post("/get-about", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.get("/get-orders-with-carts/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
 
+    // Fetch orders for the given user
+    const orders = await Order.find({ userId });
+
+    if (orders.length === 0) {
+      return res.status(404).json({ message: "No orders found for this user" });
+    }
+
+    // For each order, fetch associated carts
+    const ordersWithCarts = await Promise.all(
+      orders.map(async (order) => {
+        const carts = await Cart.find({ orderId: order._id })
+          .populate("accessId")
+          .populate("baloonId")
+          .exec();
+        return { ...order.toObject(), carts };
+      })
+    );
+
+    res.json(ordersWithCarts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 app.post("/store-order-mobile", async (req, res) => {
   try {
     const { userId, status, carts } = req.body;
