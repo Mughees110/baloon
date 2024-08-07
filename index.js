@@ -1164,7 +1164,7 @@ app.post("/store-order-mobile", async (req, res) => {
       })
     );
 
-    res.json("stored successfully");
+    res.json(order._id);
   } catch (error) {
     res.status(500).json({ error: error });
   }
