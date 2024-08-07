@@ -1117,7 +1117,7 @@ app.post("/get-about", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-app.get("/get-orders-with-carts/:userId", async (req, res) => {
+app.post("/get-orders-with-carts/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
