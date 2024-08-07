@@ -1163,7 +1163,7 @@ app.post("/store-order-mobile", async (req, res) => {
         await crt.save();
       })
     );
-
+    console.log("here");
     res.json({ orderId: order._id });
   } catch (error) {
     res.status(500).json({ error: error });
