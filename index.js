@@ -1057,7 +1057,24 @@ app.post("/get-user-cart", async (req, res) => {
       .populate("sizeId")
       .exec();
 
-    res.json(baloons); // Pass the rooms data with attached service documents to the client
+    var totalPrice = 0;
+    // Calculate the total price
+    for (const item of baloons) {
+      if (item.accessId) {
+        const access = await Access.findById(item.accessId._id);
+        totalPrice += access.price * item.quantity;
+      }
+      if (item.sizeId) {
+        const size = await Size.findById(item.sizeId._id);
+        totalPrice += size.price * item.quantity;
+      }
+      if (item.sizeId == null && item.baloonId) {
+        const baloon = await Baloon.findById(item.baloonId._id);
+        totalPrice += baloon.price * item.quantity;
+      }
+    }
+
+    res.json({ carts: baloons, totalPrice: totalPrice }); // Pass the rooms data with attached service documents to the client
   } catch (error) {
     console.error("Error fetching baloons:", error);
     res.status(500).json({ error: "Internal Server Error" });
