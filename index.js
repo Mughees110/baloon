@@ -84,8 +84,11 @@ const Size = mongoose.model("Size", sizeSchema);
 const cartSchema = new mongoose.Schema({
   baloonId: { type: mongoose.Schema.Types.ObjectId, ref: "Baloon" },
   accessId: { type: mongoose.Schema.Types.ObjectId, ref: "Access" },
-  orderId: { type: String },
-  quantity: { type: String }, // Assuming images is an array of file names or URLs
+  sizeId: { type: mongoose.Schema.Types.ObjectId, ref: "Size" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+  quantity: { type: String },
+  status: { type: String }, // Assuming images is an array of file names or URLs
 });
 const Cart = mongoose.model("Cart", cartSchema);
 
@@ -101,7 +104,9 @@ const Access = mongoose.model("Access", accessSchema);
 
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  status: { type: String, required: false }, // Assuming images is an array of file names or URLs
+  status: { type: String, required: false },
+  totalPrice: { type: String, required: false },
+  createdAt: { type: Date, required: false }, // Assuming images is an array of file names or URLs
 });
 const Order = mongoose.model("Order", orderSchema);
 
@@ -1009,7 +1014,104 @@ app.get("/delete-cart/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.post("/add-to-cart", async (req, res) => {
+  try {
+    const { baloonId, accessId, quantity, sizeId, userId } = req.body;
+    console.log(req.body);
+    const cart = new Cart({
+      baloonId,
+      accessId,
+      quantity,
+      sizeId,
+      userId,
+      status: "active",
+    });
+    await cart.save();
+    res.json({ message: "added to cart successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+app.post("/remove-from-cart", async (req, res) => {
+  try {
+    const { cartId } = req.body;
+    // Find the user by ID and delete
+    const order = await Cart.findByIdAndDelete(cartId);
 
+    if (!order) {
+      return res.status(404).json({ error: "cart not found" });
+    }
+
+    res.json({ message: "removed successfully" });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.post("/get-user-cart", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const baloons = await Cart.find({ userId })
+      .populate("accessId")
+      .populate("baloonId")
+      .populate("sizeId")
+      .exec();
+
+    res.json(baloons); // Pass the rooms data with attached service documents to the client
+  } catch (error) {
+    console.error("Error fetching baloons:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.post("/checkout", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    // Fetch active cart items for the user
+    const cartItems = await Cart.find({ userId, status: "active" });
+
+    if (cartItems.length === 0) {
+      return res.status(400).json({ message: "No items in cart" });
+    }
+
+    let totalPrice = 0;
+
+    // Calculate the total price
+    for (const item of cartItems) {
+      if (item.accessId) {
+        const access = await Access.findById(item.accessId);
+        totalPrice += access.price * item.quantity;
+      }
+      if (item.sizeId) {
+        const size = await Size.findById(item.sizeId);
+        totalPrice += size.price * item.quantity;
+      }
+      if (item.sizeId == null && item.baloonId) {
+        const baloon = await Baloon.findById(item.baloonId);
+        totalPrice += baloon.price * item.quantity;
+      }
+    }
+
+    // Create a new order
+    const order = new Order({
+      userId,
+      totalPrice,
+      status: "pending", // Assuming you have order statuses like pending, completed, etc.
+      createdAt: new Date(),
+    });
+    await order.save();
+
+    // Associate orderId with each cart item and update their status
+    await Cart.updateMany(
+      { userId, status: "active" },
+      { $set: { orderId: order._id, status: "ordered" } }
+    );
+
+    res.json({ message: "Checkout successful", orderId: order._id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 app.get("/get-about", async (req, res) => {
   try {
     // Check if any record exists in the Hotel collection
