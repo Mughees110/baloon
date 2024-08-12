@@ -1253,6 +1253,7 @@ app.post("/get-orders-with-carts/:userId", async (req, res) => {
         const carts = await Cart.find({ orderId: order._id })
           .populate("accessId")
           .populate("baloonId")
+          .populate("sizeId")
           .exec();
         return { ...order.toObject(), carts };
       })
