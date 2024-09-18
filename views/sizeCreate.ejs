@@ -191,7 +191,11 @@
               Create Size
            </h2>
         <form action="/store-size" method="post">
-            
+          <select name="size" class="form-control">
+            <% uniqueSizes.forEach(function(size) { %>
+              <option value="<%= size %>"><%= size %></option>
+            <% }) %>
+          </select>
 
             <label class="form-control">
                 Size:</label>

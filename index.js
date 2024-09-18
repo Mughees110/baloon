@@ -536,9 +536,11 @@ app.get("/sizes/:baloonId", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-app.get("/sizes-create/:baloonId", (req, res) => {
+app.get("/sizes-create/:baloonId", async (req, res) => {
   const baloonId = req.params.baloonId;
-  res.render("sizeCreate", { baloonId });
+  const uniqueSizes = await Size.distinct("size");
+
+  res.render("sizeCreate", { baloonId, uniqueSizes });
 });
 app.get("/size/:id", async (req, res) => {
   try {
