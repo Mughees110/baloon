@@ -539,6 +539,17 @@ app.get("/sizes-create/:baloonId", (req, res) => {
   const baloonId = req.params.baloonId;
   res.render("sizeCreate", { baloonId });
 });
+app.get("/size/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const size = await Size.findById(id);
+
+    res.render("sizeEdit", { size }); // Pass the users data to the EJS template
+  } catch (error) {
+    console.error("Error fetching subs:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 app.post("/store-size", async (req, res) => {
   try {
     const { size, price, baloonId } = req.body;
@@ -557,6 +568,36 @@ app.post("/store-size", async (req, res) => {
     res.redirect("/sizes/" + baloonId + "?success=2");
   } catch (error) {
     res.status(500).json({ error: error });
+  }
+});
+app.post("/update-size/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "id is required" });
+    }
+    const { size, price } = req.body;
+    // Find the room by ID
+    const siz = await Size.findById(id);
+
+    if (!siz) {
+      return res.status(404).json({ error: "Siz not found" });
+    }
+
+    if (size) {
+      siz.size = size;
+    }
+    if (price) {
+      siz.price = price;
+    }
+
+    // Save the updated room
+    await siz.save();
+
+    res.redirect("/sizes/" + siz.baloonId + "?success=1");
+  } catch (error) {
+    console.error("Error updating sub:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 app.get("/delete-size/:id", async (req, res) => {
