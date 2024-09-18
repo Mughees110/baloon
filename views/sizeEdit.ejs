@@ -100,15 +100,15 @@
           </a>
         </li>-->
         <li class="nav-item">
-          <a class="nav-link text-white" href="/baloons/foil">
-            <span class="nav-link-text ms-1">Foil Baloons</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-white active" href="/baloons/latex">
-            <span class="nav-link-text ms-1">Latex Baloons</span>
-          </a>
-        </li>
+            <a class="nav-link text-white <%= baloon.type === 'foil' ? 'active' : '' %>" href="/baloons/foil">
+              <span class="nav-link-text ms-1">Foil Baloons</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white <%= baloon.type === 'latex' ? 'active' : '' %>" href="/baloons/latex">
+              <span class="nav-link-text ms-1">Latex Baloons</span>
+            </a>
+          </li>
         <li class="nav-item">
           <a class="nav-link text-white" href="/subs">
             <span class="nav-link-text ms-1">Sub Categories</span>

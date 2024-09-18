@@ -529,8 +529,9 @@ app.get("/sizes/:baloonId", async (req, res) => {
         : successValue === "4"
         ? "Email already exists!"
         : null;
+    const baloon = await Baloon.findById(baloonId);
 
-    res.render("sizes", { sizes, baloonId, successMessage }); // Pass the users data to the EJS template
+    res.render("sizes", { sizes, baloonId, successMessage, baloon }); // Pass the users data to the EJS template
   } catch (error) {
     console.error("Error fetching subs:", error);
     res.status(500).json({ error: "Internal Server Error" });
