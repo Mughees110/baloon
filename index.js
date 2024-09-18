@@ -555,14 +555,20 @@ app.get("/size/:id", async (req, res) => {
 });
 app.post("/store-size", async (req, res) => {
   try {
-    const { size, price, baloonId, quantity } = req.body;
+    const { size, price, baloonId, quantity, sized } = req.body;
     console.log(req.body);
+    if (sized) {
+      si = sized;
+    }
+    if (!sized) {
+      si = size;
+    }
 
     // Extract file paths from req.files object
 
     // Create a new Room document
     const newSize = new Size({
-      size,
+      size: si,
       price,
       quantity,
       baloonId,
