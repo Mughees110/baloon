@@ -194,6 +194,7 @@
           <label class="form-control">
             Select Size from doropdown:</label>
           <select name="sized" class="form-control">
+            <option value="">Choose</option>
             <% uniqueSizes.forEach(function(size) { %>
               <option value="<%= size %>"><%= size %></option>
             <% }) %>
