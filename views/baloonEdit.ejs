@@ -196,7 +196,7 @@
         <form action="/update-baloon/<%= baloon._id %>" method="post" enctype="multipart/form-data">
             <label class="form-control">Name:</label>
             <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="name" name="name" value="<%= baloon.name %>"><br>
-            <% if (type === 'foil') { %>
+            <% if (baloon.type === 'foil') { %>
             <label class="form-control">Color:</label>
             <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="color" name="color" value="<%= baloon.color %>"><br>
             
