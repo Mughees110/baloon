@@ -191,7 +191,9 @@
               Create Size
            </h2>
         <form action="/store-size" method="post">
-          <select name="size" class="form-control">
+          <label class="form-control">
+            Select Size from doropdown:</label>
+          <select name="sized" class="form-control">
             <% uniqueSizes.forEach(function(size) { %>
               <option value="<%= size %>"><%= size %></option>
             <% }) %>
