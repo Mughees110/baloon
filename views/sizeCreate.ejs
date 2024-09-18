@@ -187,7 +187,7 @@
       <div class="row">
         
         <div class="col-md-6">
-          <% if (type === 'latex') { %>
+          <% if (baloon.type === 'latex') { %>
             <h2>
               Create Size
            </h2>
@@ -200,12 +200,12 @@
               <% } %>
             
         <form action="/store-size" method="post">
-          <% if (type === 'latex') { %>
+          <% if (baloon.type === 'latex') { %>
             <label class="form-control">
               Select Size from doropdown:</label>
             <% } %>
 
-            <% if (type === 'foil') { %>
+            <% if (baloon.type === 'foil') { %>
               <label class="form-control">
                 Select Color from doropdown:</label>
               <% } %>
@@ -217,11 +217,11 @@
             <% }) %>
           </select>
           OR
-          <% if (type === 'latex') { %>
+          <% if (baloon.type === 'latex') { %>
             <label class="form-control">
               Write Size if not in dropdown:</label>
             <% } %>
-            <% if (type === 'foil') { %>
+            <% if (baloon.type === 'foil') { %>
               <label class="form-control">
                 Write Color if not in dropdown:</label>
               <% } %>

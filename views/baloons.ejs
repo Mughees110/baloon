@@ -205,11 +205,20 @@
           <% baloons.forEach(baloon => { %>
           <tr>
             <td><%= baloon.name %></td>
-            
+            <% if (type === 'latex') { %>
               <td><a class="btn btn-sm btn-primary" href="/sizes/<%= baloon._id %>">
                 
                 Manage Sizes
               </a></td>
+              <% } %>
+              <% if (type === 'foil') { %>
+                <td><a class="btn btn-sm btn-primary" href="/sizes/<%= baloon._id %>">
+                  
+                  Manage Colors
+                </a></td>
+                <% } %>
+            
+              
               
             
             <td style="text-align: right;">
