@@ -194,18 +194,7 @@
         <form action="/store-baloon" method="post" enctype="multipart/form-data">
             <label class="form-control">Name</label>
             <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="name" name="name">
-            <% if (type === 'foil') { %>
-              <label class="form-control">Price</label>
-            <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="price" name="price"><br>
             
-            <label class="form-control">Color</label>
-            <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="color" name="color"><br>
-            <label class="form-control">Size</label>
-            <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="size" name="size"><br>
-            <label class="form-control">Quantity</label>
-            <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="quantity" name="quantity"><br>
-            
-              <% } %>
             <input type="hidden" name="type" value="<%= type %>">
             <label class="form-control">
                 Image</label>

@@ -192,9 +192,15 @@
            </h2>
         <form action="/update-size/<%= size._id %>" method="post">
             
-
-            <label class="form-control">
-                Size:</label>
+            <% if (baloon.type === 'latex') { %>
+                <label class="form-control">
+                    Size:</label>
+                <% } %>
+                <% if (baloon.type === 'foil') { %>
+                    <label class="form-control">
+                        Color:</label>
+                    <% } %>
+            
               <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="size" name="size" value="<%= size.size %>"><br>
               <label class="form-control">
                 Price:</label>

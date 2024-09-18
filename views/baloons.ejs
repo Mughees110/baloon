@@ -205,12 +205,12 @@
           <% baloons.forEach(baloon => { %>
           <tr>
             <td><%= baloon.name %></td>
-            <% if (type === 'latex') { %>
+            
               <td><a class="btn btn-sm btn-primary" href="/sizes/<%= baloon._id %>">
                 
                 Manage Sizes
               </a></td>
-              <% } %>
+              
             
             <td style="text-align: right;">
               <a class="btn btn-sm btn-success" href="/baloon/<%= baloon._id %>">

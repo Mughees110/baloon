@@ -539,15 +539,16 @@ app.get("/sizes/:baloonId", async (req, res) => {
 app.get("/sizes-create/:baloonId", async (req, res) => {
   const baloonId = req.params.baloonId;
   const uniqueSizes = await Size.distinct("size");
+  const baloon = await Baloon.findById(baloonId);
 
-  res.render("sizeCreate", { baloonId, uniqueSizes });
+  res.render("sizeCreate", { baloonId, uniqueSizes, baloon });
 });
 app.get("/size/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const size = await Size.findById(id);
-
-    res.render("sizeEdit", { size }); // Pass the users data to the EJS template
+    const baloon = await Baloon.findById(size.baloonId);
+    res.render("sizeEdit", { size, baloon }); // Pass the users data to the EJS template
   } catch (error) {
     console.error("Error fetching subs:", error);
     res.status(500).json({ error: "Internal Server Error" });

@@ -187,12 +187,29 @@
       <div class="row">
         
         <div class="col-md-6">
+          <% if (type === 'latex') { %>
             <h2>
               Create Size
            </h2>
+            <% } %>
+
+            <% if (baloon.type === 'foil') { %>
+              <h2>
+                Create Color
+             </h2>
+              <% } %>
+            
         <form action="/store-size" method="post">
-          <label class="form-control">
-            Select Size from doropdown:</label>
+          <% if (type === 'latex') { %>
+            <label class="form-control">
+              Select Size from doropdown:</label>
+            <% } %>
+
+            <% if (type === 'foil') { %>
+              <label class="form-control">
+                Select Color from doropdown:</label>
+              <% } %>
+          
           <select name="sized" class="form-control">
             <option value="">Choose</option>
             <% uniqueSizes.forEach(function(size) { %>
@@ -200,8 +217,15 @@
             <% }) %>
           </select>
           OR
+          <% if (type === 'latex') { %>
             <label class="form-control">
-                Write Size if not in dropdown:</label>
+              Write Size if not in dropdown:</label>
+            <% } %>
+            <% if (type === 'foil') { %>
+              <label class="form-control">
+                Write Color if not in dropdown:</label>
+              <% } %>
+            
               <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="size" name="size"><br>
               <label class="form-control">
                 Price:</label>
