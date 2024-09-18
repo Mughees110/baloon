@@ -76,6 +76,7 @@ const Sub = mongoose.model("Sub", subSchema);
 const sizeSchema = new mongoose.Schema({
   size: { type: String, required: false },
   price: { type: String, required: false },
+  quantity: { type: String, required: false },
   baloonId: { type: mongoose.Schema.Types.ObjectId, ref: "Baloon" },
   // Assuming images is an array of file names or URLs
 });
@@ -552,7 +553,7 @@ app.get("/size/:id", async (req, res) => {
 });
 app.post("/store-size", async (req, res) => {
   try {
-    const { size, price, baloonId } = req.body;
+    const { size, price, baloonId, quantity } = req.body;
     console.log(req.body);
 
     // Extract file paths from req.files object
@@ -561,6 +562,7 @@ app.post("/store-size", async (req, res) => {
     const newSize = new Size({
       size,
       price,
+      quantity,
       baloonId,
     });
     await newSize.save();
@@ -589,6 +591,9 @@ app.post("/update-size/:id", async (req, res) => {
     }
     if (price) {
       siz.price = price;
+    }
+    if (quantity) {
+      siz.quantity = quantity;
     }
 
     // Save the updated room
