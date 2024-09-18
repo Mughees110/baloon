@@ -578,7 +578,7 @@ app.post("/update-size/:id", async (req, res) => {
     if (!id) {
       return res.status(400).json({ error: "id is required" });
     }
-    const { size, price } = req.body;
+    const { size, price, quantity } = req.body;
     // Find the room by ID
     const siz = await Size.findById(id);
 
