@@ -199,7 +199,9 @@ app.get("/admin-only", authenticateAdminSession, (req, res) => {
 
 app.set("view engine", "ejs"); // Set EJS as the view engine
 app.set("views", __dirname + "/views");
-
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Admin-only route accessed successfully" });
+});
 app.get("/about", async (req, res) => {
   const successMessage = req.query.success;
   try {
