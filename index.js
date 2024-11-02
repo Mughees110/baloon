@@ -1090,6 +1090,29 @@ app.post("/add-to-cart", async (req, res) => {
     res.status(500).json({ error: error });
   }
 });
+app.post("/edit-cart", async (req, res) => {
+  try {
+    const { cartId, quantity } = req.body;
+
+    // Find the cart item by cartId
+    const cartItem = await Cart.findById(cartId);
+
+    if (!cartItem) {
+      return res.status(404).json({ message: "Cart item not found" });
+    }
+
+    // Update the quantity
+    cartItem.quantity = quantity;
+
+    // Save the updated cart item
+    await cartItem.save();
+
+    res.json({ message: "Cart item updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/remove-from-cart", async (req, res) => {
   try {
     const { cartId } = req.body;
