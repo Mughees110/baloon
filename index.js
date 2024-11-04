@@ -39,7 +39,11 @@ async function connectToDatabase() {
   console.log("done");
   try {
     console.log("here");
-    await mongoose.connect("mongodb://localhost:27017/mydatabase", {});
+    await mongoose.connect("mongodb://127.0.0.1:27017/mydatabase", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      connectTimeoutMS: 10000,
+    });
 
     const db = mongoose.connection;
 
