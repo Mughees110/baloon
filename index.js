@@ -399,7 +399,7 @@ app.get("/delete-baloon/:id", async (req, res) => {
       return res.status(404).json({ error: "Baloon not found" });
     }
 
-    res.redirect("/baloons" + baloon.type + "?success=3");
+    res.redirect("/baloons/" + baloon.type + "?success=3");
   } catch (error) {
     console.error("Error deleting baloon:", error);
     res.status(500).json({ error: "Internal Server Error" });
