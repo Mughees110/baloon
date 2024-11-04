@@ -921,7 +921,7 @@ app.post(
       // Save the updated service
       await user.save();
 
-      res.json("success=1");
+      res.json({ user: user });
     } catch (error) {
       console.error("Error updating user:", error);
       res.status(500).json({ error: "Internal Server Error" });
