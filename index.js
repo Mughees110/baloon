@@ -888,6 +888,46 @@ app.post(
     }
   }
 );
+app.post(
+  "/update-user-api/:id",
+  upload.fields([{ name: "image", maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      if (!id) {
+        return res.status(400).json({ error: "id is required" });
+      }
+      const { name, password } = req.body;
+      // Find the service by ID
+      const user = await User.findById(id);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (name) {
+        user.name = name;
+      }
+
+      if (password) {
+        user.password = password;
+      }
+      // Check if coverImage is uploaded
+      if (req.files["image"] && req.files["image"].length > 0) {
+        // Assuming you want to store coverImage as a single file
+        user.image = req.files["image"][0].filename; // Save the filename to the service object
+      }
+
+      // Save the updated service
+      await user.save();
+
+      res.json("success=1");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
 app.get("/delete-user/:id", async (req, res) => {
   try {
     const id = req.params.id;
