@@ -16,6 +16,10 @@ const stripe = Stripe(
   "sk_test_51O1qFMKiAN37OnJdKEWRj3a0oCjlxjs5K6pmCfREwnZPgRsqqrKIqKOIpD5iS0Kj96GDdVIXSDcaRJBtsN5tsjRH00nxbQlbD0"
 );
 
+const sharp = require("sharp");
+const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(
@@ -35,10 +39,7 @@ async function connectToDatabase() {
   console.log("done");
   try {
     console.log("here");
-    await mongoose.connect(
-      "mongodb+srv://testusername:testuserpassword@cluster0.nfgli.mongodb.net/baloon?retryWrites=true&w=majority",
-      { useNewUrlParser: true, useUnifiedTopology: true }
-    );
+    await mongoose.connect("mongodb://localhost:27017/mydatabase", {});
 
     const db = mongoose.connection;
 
@@ -292,10 +293,21 @@ app.post(
     try {
       const { name, price, color, size, quantity, type, subId } = req.body;
 
-      // Extract file paths from req.files object
-      const image = req.files["image"][0].originalname;
+      // Extract file path from req.files object
+      const imageFile = req.files["image"][0];
+      const originalPath = imageFile.path;
 
-      // Create a new Room document
+      // Generate a unique name for the compressed image
+      const uniqueImageName = `${uuidv4()}.jpg`;
+      const compressedPath = path.join("uploads", uniqueImageName);
+
+      // Compress the image using sharp
+      await sharp(originalPath)
+        .resize(500, 500, { fit: "inside" }) // Resize to max 500x500 pixels
+        .jpeg({ quality: 70 }) // Set JPEG quality to 70%
+        .toFile(compressedPath);
+
+      // Save the unique image name in the database
       const newBaloon = new Baloon({
         name,
         price,
@@ -304,13 +316,18 @@ app.post(
         quantity,
         type,
         subId,
-        image,
+        image: uniqueImageName,
       });
+
+      // Save the new baloon document
       await newBaloon.save();
+
+      // Delete the original image to save disk space
+      fs.unlinkSync(originalPath);
 
       res.redirect("/baloons/" + type + "?success=2");
     } catch (error) {
-      res.status(500).json({ error: error });
+      res.status(500).json({ error: error.message });
     }
   }
 );
