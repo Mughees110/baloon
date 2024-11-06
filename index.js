@@ -889,14 +889,10 @@ app.post(
   }
 );
 app.post(
-  "/update-user-api/:id",
+  "/update-user-api",
   upload.fields([{ name: "image", maxCount: 1 }]),
   async (req, res) => {
     try {
-      const id = req.params.id;
-      if (!id) {
-        return res.status(400).json({ error: "id is required" });
-      }
       const { name, password, email } = req.body;
       // Find the service by ID
       const user = await User.findOne({ email });
