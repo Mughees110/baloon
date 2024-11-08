@@ -1276,6 +1276,14 @@ app.post("/get-baloons", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.post("/get-baloons-2", async (req, res) => {
+  try {
+    res.json("hi"); // Pass the rooms data with attached service documents to the client
+  } catch (error) {
+    console.error("Error fetching baloons:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 app.post("/get-baloons-by-sub", async (req, res) => {
   try {
     const { subId } = req.body;
