@@ -888,7 +888,7 @@ app.post(
     }
   }
 );
-app.post("update-user-api", async (req, res) => {
+app.post("/update-user-api", async (req, res) => {
   const { name, password, email } = req.body;
   // Find the service by ID
   const user = await User.findOne({ email });
