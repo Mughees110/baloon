@@ -1243,6 +1243,28 @@ app.get("/get-about", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.post("/update-user-api", async (req, res) => {
+  const { name, password, email } = req.body;
+  // Find the service by ID
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  if (name) {
+    user.name = name;
+  }
+
+  if (password) {
+    user.password = password;
+  }
+
+  // Save the updated service
+  await user.save();
+
+  res.json({ user: user });
+});
 app.post("/get-baloons", async (req, res) => {
   try {
     const { type } = req.body;
