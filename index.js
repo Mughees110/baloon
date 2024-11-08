@@ -889,7 +889,7 @@ app.post(
   }
 );
 app.post(
-  "/update-user-api",
+  "update-user-api",
   upload.fields([{ name: "image", maxCount: 1 }]),
   async (req, res) => {
     try {
