@@ -193,6 +193,10 @@
         <form action="/update-sub/<%= sub._id %>" method="post" >
             <label class="form-control">Name:</label>
             <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="name" name="name" value="<%= sub.name %>"><br>
+            <select class="form-control inputT" id="type" name="type">
+              <option value="foil" <%= sub.type === 'foil' ? 'selected' : '' %>>Foil</option>
+              <option value="latex" <%= sub.type === 'latex' ? 'selected' : '' %>>Latex</option>
+            </select><br>
             <input class="form-control btn btn-success btn-sm" type="submit" value="Submit">
             
         </form>

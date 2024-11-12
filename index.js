@@ -74,6 +74,7 @@ const Baloon = mongoose.model("Baloon", baloonSchema);
 
 const subSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  type: { type: String, required: true },
   // Assuming images is an array of file names or URLs
 });
 const Sub = mongoose.model("Sub", subSchema);
@@ -695,7 +696,7 @@ app.get("/subs-create", (req, res) => {
 });
 app.post("/store-sub", async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, type } = req.body;
     console.log(req.body);
 
     // Extract file paths from req.files object
@@ -703,6 +704,7 @@ app.post("/store-sub", async (req, res) => {
     // Create a new Room document
     const newSub = new Sub({
       name,
+      type,
     });
     await newSub.save();
 
@@ -717,7 +719,7 @@ app.post("/update-sub/:id", async (req, res) => {
     if (!id) {
       return res.status(400).json({ error: "id is required" });
     }
-    const { name } = req.body;
+    const { name, type } = req.body;
     // Find the room by ID
     const sub = await Sub.findById(id);
 
@@ -727,6 +729,9 @@ app.post("/update-sub/:id", async (req, res) => {
 
     if (name) {
       sub.name = name;
+    }
+    if (type) {
+      sub.type = type;
     }
 
     // Save the updated room
@@ -1297,7 +1302,8 @@ app.post("/get-baloons-by-sub", async (req, res) => {
 });
 app.post("/get-subs", async (req, res) => {
   try {
-    const baloons = await Sub.find({});
+    const { type } = req.body;
+    const baloons = await Sub.find({ type });
 
     res.json(baloons); // Pass the rooms data with attached service documents to the client
   } catch (error) {

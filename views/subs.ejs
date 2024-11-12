@@ -194,6 +194,7 @@
         <thead>
           <tr>
             <th>Name</th>
+            <th>Type</th>
             <th></th>
           </tr>
         </thead>
@@ -201,6 +202,7 @@
           <% subs.forEach(sub => { %>
           <tr>
             <td><%= sub.name %></td>
+            <td><%= sub.type %></td>
             <td style="text-align: right;">
               <a class="btn btn-sm btn-success" href="/sub/<%= sub._id %>">
                 Edit
