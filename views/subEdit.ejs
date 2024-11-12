@@ -27,6 +27,7 @@
   <style>
     .inputT{
       padding: 10px;
+      border:1px solid grey !important;
     }
     label{
     font-weight: bold !important;
@@ -193,6 +194,7 @@
         <form action="/update-sub/<%= sub._id %>" method="post" >
             <label class="form-control">Name:</label>
             <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="name" name="name" value="<%= sub.name %>"><br>
+            <label class="form-control">Type:</label>
             <select class="form-control inputT" id="type" name="type">
               <option value="foil" <%= sub.type === 'foil' ? 'selected' : '' %>>Foil</option>
               <option value="latex" <%= sub.type === 'latex' ? 'selected' : '' %>>Latex</option>

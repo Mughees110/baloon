@@ -27,6 +27,8 @@
   <style>
     .inputT{
       padding: 10px;
+      border:1px solid grey !important;
+
     }
     label{
     font-weight: bold !important;
@@ -195,7 +197,8 @@
         <form action="/store-sub" method="post">
             <label class="form-control">Name:</label>
             <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="name" name="name"><br>
-            <select name="type" class="form-control">
+            <label class="form-control">Type:</label>
+            <select name="type" class="form-control inputT">
               <option value="foil">Foil</option>
               <option value="latex">Latex</option>
             </select><br>
