@@ -199,7 +199,7 @@
              </h2>
               <% } %>
             
-        <form action="/store-size" method="post">
+        <form action="/store-size" method="post" enctype="multipart/form-data">
           <% if (baloon.type === 'latex') { %>
             <label class="form-control">
               Select Size from doropdown:</label>

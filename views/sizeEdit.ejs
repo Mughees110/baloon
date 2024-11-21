@@ -190,7 +190,7 @@
             <h2>
               Edit Size
            </h2>
-        <form action="/update-size/<%= size._id %>" method="post">
+        <form action="/update-size/<%= size._id %>" method="post" enctype="multipart/form-data">
             
             <% if (baloon.type === 'latex') { %>
                 <label class="form-control">
