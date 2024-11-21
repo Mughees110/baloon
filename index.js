@@ -120,7 +120,9 @@ const Order = mongoose.model("Order", orderSchema);
 
 const aboutSchema = new mongoose.Schema({
   about: { type: String, required: false },
-  contact: { type: String, required: false }, // Assuming images is an array of file names or URLs
+  contact: { type: String, required: false },
+  instagram: { type: String, required: false },
+  facebook: { type: String, required: false }, // Assuming images is an array of file names or URLs
 });
 const About = mongoose.model("About", aboutSchema);
 
@@ -876,7 +878,7 @@ app.post("/update-about/:id", async (req, res) => {
     if (!id) {
       return res.status(400).json({ error: "id is required" });
     }
-    const { about, contact } = req.body;
+    const { about, contact, instagram, facebook } = req.body;
     //const { name, price, description, capacity } = req.body;
     // Find the room by ID
     const abt = await About.findById(id);
@@ -890,6 +892,12 @@ app.post("/update-about/:id", async (req, res) => {
     }
     if (contact) {
       abt.contact = contact;
+    }
+    if (instagram) {
+      abt.instagram = instagram;
+    }
+    if (facebook) {
+      abt.facebook = facebook;
     }
 
     // Save the updated room
