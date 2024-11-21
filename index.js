@@ -1156,21 +1156,33 @@ app.get("/delete-cart/:id", async (req, res) => {
 app.post("/add-to-cart", async (req, res) => {
   try {
     const { baloonId, accessId, quantity, sizeId, userId } = req.body;
-    console.log(req.body);
-    const cart = new Cart({
-      baloonId,
-      accessId,
-      quantity,
-      sizeId,
-      userId,
-      status: "active",
-    });
-    await cart.save();
-    res.json({ message: "added to cart successfully" });
+
+    // Check if there's already a cart item with the same sizeId for this user
+    const existingCart = await Cart.findOne({ sizeId, userId });
+
+    if (existingCart) {
+      // If found, update the quantity
+      existingCart.quantity += quantity; // Adjust logic if quantity should replace instead of increment
+      await existingCart.save();
+      res.json({ message: "Cart quantity updated successfully" });
+    } else {
+      // If not found, create a new cart record
+      const cart = new Cart({
+        baloonId,
+        accessId,
+        quantity,
+        sizeId,
+        userId,
+        status: "active",
+      });
+      await cart.save();
+      res.json({ message: "Added to cart successfully" });
+    }
   } catch (error) {
-    res.status(500).json({ error: error });
+    res.status(500).json({ error: error.message });
   }
 });
+
 app.post("/edit-cart", async (req, res) => {
   try {
     const { cartId, quantity } = req.body;
