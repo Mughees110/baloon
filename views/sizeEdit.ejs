@@ -208,7 +208,10 @@
               <label class="form-control">
                 Quantity:</label>
               <input style="border: 1px solid grey;" class="form-control inputT" type="text" id="quantity" name="quantity" value="<%= size.quantity %>"><br>
-              
+              <label class="form-control">
+                Image:</label>
+             <img src="/<%= size.image %>" alt="Image" style="width: 100px;"><br>
+             <input class="inputT" type="file" id="image" name="image" ><br>
             <input class="form-control btn btn-success btn-sm" type="submit" value="Submit">
             
         </form>

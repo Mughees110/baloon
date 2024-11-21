@@ -83,6 +83,7 @@ const sizeSchema = new mongoose.Schema({
   size: { type: String, required: false },
   price: { type: String, required: false },
   quantity: { type: String, required: false },
+  image: { type: String, required: false },
   baloonId: { type: mongoose.Schema.Types.ObjectId, ref: "Baloon" },
   // Assuming images is an array of file names or URLs
 });
@@ -336,6 +337,7 @@ app.post(
     }
   }
 );
+
 app.post(
   "/update-baloon/:id",
   upload.fields([{ name: "image", maxCount: 1 }]),
@@ -374,7 +376,20 @@ app.post(
       }
       if (req.files["image"] && req.files["image"].length > 0) {
         // Assuming you want to store coverImage as a single file
-        baloon.image = req.files["image"][0].filename; // Save the filename to the service object
+        //baloon.image = req.files["image"][0].filename; // Save the filename to the service object
+        const imageFile = req.files["image"][0];
+        const originalPath = imageFile.path;
+
+        // Generate a unique name for the compressed image
+        const uniqueImageName = `${uuidv4()}.jpg`;
+        const compressedPath = path.join("uploads", uniqueImageName);
+
+        // Compress the image using sharp
+        await sharp(originalPath)
+          .resize(500, 500, { fit: "inside" }) // Resize to max 500x500 pixels
+          .jpeg({ quality: 70 }) // Set JPEG quality to 70%
+          .toFile(compressedPath);
+        baloon.image = uniqueImageName;
       }
 
       // Save the updated room
@@ -579,66 +594,105 @@ app.get("/size/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-app.post("/store-size", async (req, res) => {
-  try {
-    const { size, price, baloonId, quantity, sized } = req.body;
-    console.log(req.body);
-    if (sized) {
-      si = sized;
+
+app.post(
+  "/store-size",
+  upload.fields([{ name: "image", maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const { size, price, baloonId, quantity, sized } = req.body;
+      console.log(req.body);
+      if (sized) {
+        si = sized;
+      }
+      if (!sized) {
+        si = size;
+      }
+
+      const imageFile = req.files["image"][0];
+      const originalPath = imageFile.path;
+
+      // Generate a unique name for the compressed image
+      const uniqueImageName = `${uuidv4()}.jpg`;
+      const compressedPath = path.join("uploads", uniqueImageName);
+
+      // Compress the image using sharp
+      await sharp(originalPath)
+        .resize(500, 500, { fit: "inside" }) // Resize to max 500x500 pixels
+        .jpeg({ quality: 70 }) // Set JPEG quality to 70%
+        .toFile(compressedPath);
+      // Extract file paths from req.files object
+
+      // Create a new Room document
+      const newSize = new Size({
+        size: si,
+        price,
+        quantity,
+        baloonId,
+        image: uniqueImageName,
+      });
+      await newSize.save();
+
+      res.redirect("/sizes/" + baloonId + "?success=2");
+    } catch (error) {
+      res.status(500).json({ error: error });
     }
-    if (!sized) {
-      si = size;
-    }
-
-    // Extract file paths from req.files object
-
-    // Create a new Room document
-    const newSize = new Size({
-      size: si,
-      price,
-      quantity,
-      baloonId,
-    });
-    await newSize.save();
-
-    res.redirect("/sizes/" + baloonId + "?success=2");
-  } catch (error) {
-    res.status(500).json({ error: error });
   }
-});
-app.post("/update-size/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    if (!id) {
-      return res.status(400).json({ error: "id is required" });
-    }
-    const { size, price, quantity } = req.body;
-    // Find the room by ID
-    const siz = await Size.findById(id);
+);
+app.post(
+  "/update-size/:id",
+  upload.fields([{ name: "image", maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      if (!id) {
+        return res.status(400).json({ error: "id is required" });
+      }
+      const { size, price, quantity } = req.body;
+      // Find the room by ID
+      const siz = await Size.findById(id);
 
-    if (!siz) {
-      return res.status(404).json({ error: "Siz not found" });
-    }
+      if (!siz) {
+        return res.status(404).json({ error: "Siz not found" });
+      }
 
-    if (size) {
-      siz.size = size;
-    }
-    if (price) {
-      siz.price = price;
-    }
-    if (quantity) {
-      siz.quantity = quantity;
-    }
+      if (size) {
+        siz.size = size;
+      }
+      if (price) {
+        siz.price = price;
+      }
+      if (quantity) {
+        siz.quantity = quantity;
+      }
+      if (req.files["image"] && req.files["image"].length > 0) {
+        // Assuming you want to store coverImage as a single file
+        //siz.image = req.files["image"][0].filename; // Save the filename to the service object
+        const imageFile = req.files["image"][0];
+        const originalPath = imageFile.path;
 
-    // Save the updated room
-    await siz.save();
+        // Generate a unique name for the compressed image
+        const uniqueImageName = `${uuidv4()}.jpg`;
+        const compressedPath = path.join("uploads", uniqueImageName);
 
-    res.redirect("/sizes/" + siz.baloonId + "?success=1");
-  } catch (error) {
-    console.error("Error updating sub:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+        // Compress the image using sharp
+        await sharp(originalPath)
+          .resize(500, 500, { fit: "inside" }) // Resize to max 500x500 pixels
+          .jpeg({ quality: 70 }) // Set JPEG quality to 70%
+          .toFile(compressedPath);
+        siz.image = uniqueImageName;
+      }
+
+      // Save the updated room
+      await siz.save();
+
+      res.redirect("/sizes/" + siz.baloonId + "?success=1");
+    } catch (error) {
+      console.error("Error updating sub:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   }
-});
+);
 app.get("/delete-size/:id", async (req, res) => {
   try {
     const id = req.params.id;
