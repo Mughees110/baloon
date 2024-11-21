@@ -645,54 +645,54 @@ app.post(
   "/update-size/:id",
   upload.fields([{ name: "image", maxCount: 1 }]),
   async (req, res) => {
-    try {
-      const id = req.params.id;
-      if (!id) {
-        return res.status(400).json({ error: "id is required" });
-      }
-      const { size, price, quantity } = req.body;
-      // Find the room by ID
-      const siz = await Size.findById(id);
+    //try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: "id is required" });
+    }
+    const { size, price, quantity } = req.body;
+    // Find the room by ID
+    const siz = await Size.findById(id);
 
-      if (!siz) {
-        return res.status(404).json({ error: "Siz not found" });
-      }
+    if (!siz) {
+      return res.status(404).json({ error: "Siz not found" });
+    }
 
-      if (size) {
-        siz.size = size;
-      }
-      if (price) {
-        siz.price = price;
-      }
-      if (quantity) {
-        siz.quantity = quantity;
-      }
-      if (req.files["image"] && req.files["image"].length > 0) {
-        // Assuming you want to store coverImage as a single file
-        //siz.image = req.files["image"][0].filename; // Save the filename to the service object
-        const imageFile = req.files["image"][0];
-        const originalPath = imageFile.path;
+    if (size) {
+      siz.size = size;
+    }
+    if (price) {
+      siz.price = price;
+    }
+    if (quantity) {
+      siz.quantity = quantity;
+    }
+    if (req.files["image"] && req.files["image"].length > 0) {
+      // Assuming you want to store coverImage as a single file
+      //siz.image = req.files["image"][0].filename; // Save the filename to the service object
+      const imageFile = req.files["image"][0];
+      const originalPath = imageFile.path;
 
-        // Generate a unique name for the compressed image
-        const uniqueImageName = `${uuidv4()}.jpg`;
-        const compressedPath = path.join("uploads", uniqueImageName);
+      // Generate a unique name for the compressed image
+      const uniqueImageName = `${uuidv4()}.jpg`;
+      const compressedPath = path.join("uploads", uniqueImageName);
 
-        // Compress the image using sharp
-        await sharp(originalPath)
-          .resize(500, 500, { fit: "inside" }) // Resize to max 500x500 pixels
-          .jpeg({ quality: 70 }) // Set JPEG quality to 70%
-          .toFile(compressedPath);
-        siz.image = uniqueImageName;
-      }
+      // Compress the image using sharp
+      await sharp(originalPath)
+        .resize(500, 500, { fit: "inside" }) // Resize to max 500x500 pixels
+        .jpeg({ quality: 70 }) // Set JPEG quality to 70%
+        .toFile(compressedPath);
+      siz.image = uniqueImageName;
+    }
 
-      // Save the updated room
-      await siz.save();
+    // Save the updated room
+    await siz.save();
 
-      res.redirect("/sizes/" + siz.baloonId + "?success=1");
-    } catch (error) {
+    res.redirect("/sizes/" + siz.baloonId + "?success=1");
+    /* } catch (error) {
       console.error("Error updating sub:", error);
       res.status(500).json({ error: "Internal Server Error" });
-    }
+    }*/
   }
 );
 app.get("/delete-size/:id", async (req, res) => {
