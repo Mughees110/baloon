@@ -1165,12 +1165,19 @@ app.post("/add-to-cart", async (req, res) => {
   try {
     const { baloonId, accessId, quantity, sizeId, userId } = req.body;
 
+    // Convert quantity to a number to avoid concatenation
+    const quantityNumber = parseInt(quantity, 10); // Use parseFloat if you expect decimals
+
+    if (isNaN(quantityNumber)) {
+      return res.status(400).json({ error: "Invalid quantity provided" });
+    }
+
     // Check if there's already a cart item with the same sizeId for this user
     const existingCart = await Cart.findOne({ sizeId, userId });
 
     if (existingCart) {
       // If found, update the quantity
-      existingCart.quantity += quantity; // Adjust logic if quantity should replace instead of increment
+      existingCart.quantity += quantityNumber;
       await existingCart.save();
       res.json({ message: "Cart quantity updated successfully" });
     } else {
@@ -1178,7 +1185,7 @@ app.post("/add-to-cart", async (req, res) => {
       const cart = new Cart({
         baloonId,
         accessId,
-        quantity,
+        quantity: quantityNumber, // Ensure the new quantity is stored as a number
         sizeId,
         userId,
         status: "active",
