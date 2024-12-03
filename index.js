@@ -1165,38 +1165,48 @@ app.post("/add-to-cart", async (req, res) => {
   try {
     const { baloonId, accessId, quantity, sizeId, userId } = req.body;
 
-    // Convert quantity to a number to avoid concatenation
-    const quantityNumber = parseInt(quantity, 10); // Use parseFloat if you expect decimals
+    // Validate required fields
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
 
-    if (isNaN(quantityNumber)) {
+    if (!sizeId && !accessId) {
+      return res
+        .status(400)
+        .json({ error: "Either Balloon ID or Access ID is required" });
+    }
+
+    // Convert quantity to a number
+    const quantityNumber = parseInt(quantity, 10);
+    if (isNaN(quantityNumber) || quantityNumber <= 0) {
       return res.status(400).json({ error: "Invalid quantity provided" });
     }
 
-    // Check if there's already a cart item with the same sizeId for this user
+    // Check if there's already a cart item with the same sizeId or accessId for this user
+    let existingCart;
     if (sizeId) {
-      const existingCart = await Cart.findOne({ sizeId, userId });
-    }
-    if (accessId) {
-      const existingCart = await Cart.findOne({ accessId, userId });
+      existingCart = await Cart.findOne({ sizeId, userId });
+    } else if (accessId) {
+      existingCart = await Cart.findOne({ accessId, userId });
     }
 
     if (existingCart) {
       // If found, update the quantity
       existingCart.quantity += quantityNumber;
       await existingCart.save();
-      res.json({ message: "Cart quantity updated successfully" });
+      return res.json({ message: "Cart quantity updated successfully" });
     } else {
       // If not found, create a new cart record
       const cart = new Cart({
         baloonId,
         accessId,
-        quantity: quantityNumber, // Ensure the new quantity is stored as a number
+        quantity: quantityNumber,
         sizeId,
         userId,
         status: "active",
       });
       await cart.save();
-      res.json({ message: "Added to cart successfully" });
+      return res.json({ message: "Added to cart successfully" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
