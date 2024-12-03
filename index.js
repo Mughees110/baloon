@@ -95,7 +95,7 @@ const cartSchema = new mongoose.Schema({
   sizeId: { type: mongoose.Schema.Types.ObjectId, ref: "Size" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
-  quantity: { type: String },
+  quantity: { type: Number },
   status: { type: String }, // Assuming images is an array of file names or URLs
 });
 const Cart = mongoose.model("Cart", cartSchema);
