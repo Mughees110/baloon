@@ -1173,7 +1173,12 @@ app.post("/add-to-cart", async (req, res) => {
     }
 
     // Check if there's already a cart item with the same sizeId for this user
-    const existingCart = await Cart.findOne({ sizeId, userId });
+    if (sizeId) {
+      const existingCart = await Cart.findOne({ sizeId, userId });
+    }
+    if (accessId) {
+      const existingCart = await Cart.findOne({ accessId, userId });
+    }
 
     if (existingCart) {
       // If found, update the quantity
