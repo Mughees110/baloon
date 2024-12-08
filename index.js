@@ -1387,15 +1387,42 @@ app.post("/get-baloons-2", async (req, res) => {
 });
 app.post("/get-baloons-by-sub", async (req, res) => {
   try {
-    const { subId } = req.body;
-    const baloons = await Baloon.find({ subId });
+    const { subId, search } = req.body;
+    const query = { subId };
 
-    res.json(baloons); // Pass the rooms data with attached service documents to the client
+    // Add regex search condition for balloon names if `search` is not null
+    if (search) {
+      query.name = { $regex: search, $options: "i" }; // Case-insensitive regex
+    }
+
+    // Fetch balloons matching the query
+    const baloons = await Baloon.find(query);
+
+    // Extract balloon IDs for fetching sizes
+    const baloonIds = baloons.map((baloon) => baloon._id);
+
+    // Query for sizes matching the balloon IDs and the `search` (applied to `size`)
+    const sizeQuery = { baloonId: { $in: baloonIds } };
+    if (search) {
+      sizeQuery.size = { $regex: search, $options: "i" }; // Case-insensitive regex for size field
+    }
+
+    // Fetch sizes matching the query
+    const sizes = await Size.find(sizeQuery);
+
+    // Prepare the response with separate arrays for balloons and sizes
+    const result = {
+      matchedBaloons: baloons, // Balloons that matched the `name` query
+      matchedSizes: sizes, // Sizes that matched both `baloonId` and `search`
+    };
+
+    res.json(result);
   } catch (error) {
-    console.error("Error fetching baloons:", error);
+    console.error("Error fetching balloons and sizes:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 app.post("/get-subs", async (req, res) => {
   try {
     const { type } = req.body;
