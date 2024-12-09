@@ -1390,13 +1390,19 @@ app.post("/get-baloons-by-sub", async (req, res) => {
     const { subId, search } = req.body;
     const query = { subId };
 
-    // Add regex search condition for balloon names if `search` is not null
+    // Add regex search condition for balloon names if `search` is provided
     if (search) {
       query.name = { $regex: `.*${search}.*`, $options: "i" }; // Case-insensitive regex
     }
 
+    console.log("Balloon Query:", query);
+
     // Fetch balloons matching the query
     const baloons = await Baloon.find(query);
+
+    if (!baloons.length) {
+      return res.json({ matchedBaloons: [], matchedSizes: [] });
+    }
 
     // Extract balloon IDs for fetching sizes
     const baloonIds = baloons.map((baloon) => baloon._id);
@@ -1406,6 +1412,8 @@ app.post("/get-baloons-by-sub", async (req, res) => {
     if (search) {
       sizeQuery.size = { $regex: `.*${search}.*`, $options: "i" }; // Case-insensitive regex for size field
     }
+
+    console.log("Size Query:", sizeQuery);
 
     // Fetch sizes matching the query
     const sizes = await Size.find(sizeQuery);
