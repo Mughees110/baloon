@@ -1408,7 +1408,7 @@ app.post("/get-baloons-by-sub", async (req, res) => {
     const baloonIds = baloons.map((baloon) => baloon._id);
 
     // Query for sizes matching the balloon IDs and the `search` (applied to `size`)
-    const sizeQuery = { baloonId: { $in: baloonIds } };
+    //const sizeQuery = { baloonId: { $in: baloonIds } };
     if (search) {
       sizeQuery.size = { $regex: `.*${search}.*`, $options: "i" }; // Case-insensitive regex for size field
     }
@@ -1416,7 +1416,9 @@ app.post("/get-baloons-by-sub", async (req, res) => {
     console.log("Size Query:", sizeQuery);
 
     // Fetch sizes matching the query
-    const sizes = await Size.find(sizeQuery);
+    const sizes = await Size.find({
+      size: { $regex: `.*${search}.*`, $options: "i" },
+    });
 
     // Prepare the response with separate arrays for balloons and sizes
     const result = {
