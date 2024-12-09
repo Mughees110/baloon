@@ -1392,7 +1392,7 @@ app.post("/get-baloons-by-sub", async (req, res) => {
 
     // Add regex search condition for balloon names if `search` is not null
     if (search) {
-      query.name = { $regex: search, $options: "i" }; // Case-insensitive regex
+      query.name = { $regex: `.*${search}.*`, $options: "i" }; // Case-insensitive regex
     }
 
     // Fetch balloons matching the query
@@ -1404,7 +1404,7 @@ app.post("/get-baloons-by-sub", async (req, res) => {
     // Query for sizes matching the balloon IDs and the `search` (applied to `size`)
     const sizeQuery = { baloonId: { $in: baloonIds } };
     if (search) {
-      sizeQuery.size = { $regex: search, $options: "i" }; // Case-insensitive regex for size field
+      sizeQuery.size = { $regex: `.*${search}.*`, $options: "i" }; // Case-insensitive regex for size field
     }
 
     // Fetch sizes matching the query
