@@ -1387,8 +1387,20 @@ app.post("/get-baloons-2", async (req, res) => {
 });
 app.post("/get-baloons-by-sub", async (req, res) => {
   try {
-    const { subId, search } = req.body;
-    const query = { subId };
+    const { subId } = req.body;
+
+    const baloons = await Baloon.find({ subId });
+
+    res.json(baloons);
+  } catch (error) {
+    console.error("Error fetching balloons and sizes:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.post("/search", async (req, res) => {
+  try {
+    const { search } = req.body;
+    const query = {};
 
     // Add regex search condition for balloon names if `search` is provided
     if (search) {
@@ -1399,26 +1411,33 @@ app.post("/get-baloons-by-sub", async (req, res) => {
 
     // Fetch balloons matching the query
     const baloons = await Baloon.find(query);
-    const baloonsU = await Baloon.find({ subId });
-
-    // Extract balloon IDs for fetching sizes
-    const baloonIds = baloonsU.map((baloon) => baloon._id);
 
     // Query for sizes matching the balloon IDs and the `search` (applied to `size`)
-    const sizeQuery = { baloonId: { $in: baloonIds } };
+    const sizeQuery = {};
     if (search) {
       sizeQuery.size = { $regex: `.*${search}.*`, $options: "i" }; // Case-insensitive regex for size field
     }
-
+    let sizesWithBalloons = [];
     console.log("Size Query:", sizeQuery);
 
     // Fetch sizes matching the query
     const sizes = await Size.find(sizeQuery);
+    if (sizes) {
+      sizesWithBalloons = await Promise.all(
+        sizes.map(async (size) => {
+          const balloon = await Baloon.findById(size.baloonId); // Fetch balloon by balloonId
+          return {
+            ...size._doc, // Use _doc to get raw data if using Mongoose
+            balloon, // Attach the fetched balloon to the size
+          };
+        })
+      );
+    }
 
     // Prepare the response with separate arrays for balloons and sizes
     const result = {
       matchedBaloons: baloons, // Balloons that matched the `name` query
-      matchedSizes: sizes, // Sizes that matched both `baloonId` and `search`
+      matchedSizes: sizesWithBalloons, // Sizes that matched both `baloonId` and `search`
     };
 
     res.json(result);
